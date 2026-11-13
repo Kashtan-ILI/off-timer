@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -25,7 +26,7 @@ class TimerService : Service() {
         const val EXTRA_WIFI = "wifi"
         const val EXTRA_LOCK = "lock"
 
-        private const val CH_COUNT = "countdown"
+        private const val CH_COUNT = "countdown_live"
         private const val CH_RESULT = "result"
         private const val NID_COUNT = 1
         private const val NID_RESULT = 2
@@ -71,11 +72,15 @@ class TimerService : Service() {
         // ウィジェットからは中身なしで呼ばれるので、アプリで保存した設定を使う
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         val minutes = intent.getIntExtra(EXTRA_MINUTES, prefs.getInt("minutes", 10))
-        command = ShizukuShell.buildCommand(
-            intent.getBooleanExtra(EXTRA_AIRPLANE, prefs.getBoolean("airplane", true)),
-            intent.getBooleanExtra(EXTRA_WIFI, prefs.getBoolean("wifi", true)),
-            intent.getBooleanExtra(EXTRA_LOCK, prefs.getBoolean("lock", true))
-        )
+        val airplane = intent.getBooleanExtra(EXTRA_AIRPLANE, prefs.getBoolean("airplane", true))
+        val wifi = intent.getBooleanExtra(EXTRA_WIFI, prefs.getBoolean("wifi", true))
+        val lock = intent.getBooleanExtra(EXTRA_LOCK, prefs.getBoolean("lock", true))
+        command = ShizukuShell.buildCommand(airplane, wifi, lock)
+        summary = listOfNotNull(
+            if (airplane) "機内モード" else null,
+            if (wifi) "Wi-Fi OFF" else null,
+            if (lock) "ロック" else null
+        ).joinToString("・")
         val durationMs = minutes * 60_000L
         endAtMillis = System.currentTimeMillis() + durationMs
 
@@ -125,8 +130,16 @@ class TimerService : Service() {
 
     private fun ensureChannels() {
         val nm = getSystemService(NotificationManager::class.java)
+        // 古い控えめなチャンネルは削除（ステータスバーに出ないため）
+        nm.deleteNotificationChannel("countdown")
+        // ライブアップデートは「標準」以上の重要度が必要。音とバイブは無し
         nm.createNotificationChannel(
-            NotificationChannel(CH_COUNT, "カウントダウン", NotificationManager.IMPORTANCE_LOW)
+            NotificationChannel(CH_COUNT, "カウントダウン", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                setSound(null, null)
+                enableVibration(false)
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
         )
         nm.createNotificationChannel(
             NotificationChannel(CH_RESULT, "実行できなかったとき", NotificationManager.IMPORTANCE_DEFAULT)
@@ -139,6 +152,8 @@ class TimerService : Service() {
         PendingIntent.FLAG_IMMUTABLE
     )
 
+    private var summary = ""
+
     private fun countdownNotification(): Notification {
         val cancel = PendingIntent.getService(
             this, 1,
@@ -148,6 +163,12 @@ class TimerService : Service() {
         return Notification.Builder(this, CH_COUNT)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("消灯まで")
+            .setContentText(summary)
+            .setOnlyAlertOnce(true)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setCategory(Notification.CATEGORY_STOPWATCH)
+            // Android 16以降：ステータスバーのチップとロック画面に残り時間を出す
+            .addExtras(Bundle().apply { putBoolean("android.requestPromotedOngoing", true) })
             .setWhen(endAtMillis)
             .setShowWhen(true)
             .setUsesChronometer(true)
