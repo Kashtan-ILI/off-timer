@@ -148,6 +148,7 @@ class MainActivity : Activity() {
             .putBoolean("wifi", wifi)
             .putBoolean("lock", lock)
             .apply()
+        TimerWidget.updateAll(this)
     }
 
     private fun onStartPressed() {

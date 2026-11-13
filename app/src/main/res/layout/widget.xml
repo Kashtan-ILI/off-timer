@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="6dp">
+
+    <LinearLayout
+        android:id="@+id/w_info"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp">
+
+        <TextView
+            android:id="@+id/w_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="消灯タイマー"
+            android:textColor="@color/muted"
+            android:fontFamily="monospace"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/w_minutes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10分"
+            android:textColor="@color/ink"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:textSize="26sp"
+            android:includeFontPadding="false" />
+
+        <Chronometer
+            android:id="@+id/w_chrono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/accent"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:textSize="26sp"
+            android:includeFontPadding="false"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/w_button"
+        android:layout_width="92dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:background="@drawable/fill_accent"
+        android:text="スタート"
+        android:textColor="@color/paper"
+        android:textStyle="bold"
+        android:textSize="15sp"
+        android:letterSpacing="0.1" />
+</LinearLayout>

@@ -54,29 +54,37 @@ class TimerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> start(intent)
-            ACTION_CANCEL -> stopAll()
-            else -> stopAll()
+            else -> {
+                // ウィジェットから呼ばれた場合に備えて、いったん前面化してから止める
+                if (endAtMillis == 0L) {
+                    ensureChannels()
+                    goForeground(countdownNotification())
+                }
+                stopAll()
+            }
         }
         return START_NOT_STICKY
     }
 
     private fun start(intent: Intent) {
         handler.removeCallbacks(fire)
-        val minutes = intent.getIntExtra(EXTRA_MINUTES, 10)
+        // ウィジェットからは中身なしで呼ばれるので、アプリで保存した設定を使う
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val minutes = intent.getIntExtra(EXTRA_MINUTES, prefs.getInt("minutes", 10))
         command = ShizukuShell.buildCommand(
-            intent.getBooleanExtra(EXTRA_AIRPLANE, true),
-            intent.getBooleanExtra(EXTRA_WIFI, true),
-            intent.getBooleanExtra(EXTRA_LOCK, true)
+            intent.getBooleanExtra(EXTRA_AIRPLANE, prefs.getBoolean("airplane", true)),
+            intent.getBooleanExtra(EXTRA_WIFI, prefs.getBoolean("wifi", true)),
+            intent.getBooleanExtra(EXTRA_LOCK, prefs.getBoolean("lock", true))
         )
         val durationMs = minutes * 60_000L
         endAtMillis = System.currentTimeMillis() + durationMs
 
         ensureChannels()
-        val n = countdownNotification()
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NID_COUNT, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NID_COUNT, n)
+        goForeground(countdownNotification())
+        TimerWidget.updateAll(this)
+        if (command.isEmpty()) {
+            stopAll()
+            return
         }
 
         // 画面が消えていても確実に時間どおり動かすため
@@ -89,9 +97,18 @@ class TimerService : Service() {
         handler.postDelayed(fire, durationMs)
     }
 
+    private fun goForeground(n: Notification) {
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(NID_COUNT, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(NID_COUNT, n)
+        }
+    }
+
     private fun stopAll() {
         handler.removeCallbacks(fire)
         endAtMillis = 0L
+        TimerWidget.updateAll(this)
         wakeLock?.let { if (it.isHeld) it.release() }
         wakeLock = null
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -101,6 +118,7 @@ class TimerService : Service() {
     override fun onDestroy() {
         handler.removeCallbacks(fire)
         endAtMillis = 0L
+        TimerWidget.updateAll(this)
         wakeLock?.let { if (it.isHeld) it.release() }
         super.onDestroy()
     }
