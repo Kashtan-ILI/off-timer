@@ -100,9 +100,9 @@ class TimerWidget : AppWidgetProvider() {
             // －／＋（カウントダウン中は薄く表示して無効）
             v.setOnClickPendingIntent(R.id.w_minus, adjustIntent(context, -1, 30))
             v.setOnClickPendingIntent(R.id.w_plus, adjustIntent(context, 1, 31))
-            val alpha = if (running) 0.3f else 1f
-            v.setFloat(R.id.w_minus, "setAlpha", alpha)
-            v.setFloat(R.id.w_plus, "setAlpha", alpha)
+            val c = context.getColor(if (running) R.color.muted else R.color.ink)
+            v.setTextColor(R.id.w_minus, c)
+            v.setTextColor(R.id.w_plus, c)
 
             // 左側を押したらアプリを開いて分数を変えられる
             val open = PendingIntent.getActivity(
