@@ -78,6 +78,7 @@ class TimerService : Service() {
         val lock = intent.getBooleanExtra(EXTRA_LOCK, prefs.getBoolean("lock", true))
         val power = intent.getBooleanExtra(EXTRA_POWER, prefs.getBoolean("power", false))
         command = ShizukuShell.buildCommand(airplane, wifi, lock, power)
+        if (power) prefs.edit().putBoolean("power", false).apply()
         summary = listOfNotNull(
             if (airplane) "機内モード" else null,
             if (wifi) "Wi-Fi OFF" else null,

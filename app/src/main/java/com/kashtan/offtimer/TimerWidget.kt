@@ -36,13 +36,8 @@ class TimerWidget : AppWidgetProvider() {
         private const val ACTION_ADJUST = "com.kashtan.offtimer.ADJUST"
         private const val EXTRA_DIR = "dir"
 
-        /** ウィジェットの－／＋で選べる分数 */
-        private val STEPS = listOf(1, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180)
-
-        private fun step(now: Int, dir: Int): Int {
-            return if (dir > 0) STEPS.firstOrNull { it > now } ?: STEPS.last()
-            else STEPS.lastOrNull { it < now } ?: STEPS.first()
-        }
+        /** 1分刻みで1〜180分 */
+        private fun step(now: Int, dir: Int): Int = (now + dir).coerceIn(1, 180)
 
         private fun adjustIntent(context: Context, dir: Int, code: Int): PendingIntent {
             val i = Intent(context, TimerWidget::class.java)
@@ -76,6 +71,7 @@ class TimerWidget : AppWidgetProvider() {
                 v.setChronometer(R.id.w_chrono, base, null, true)
                 v.setChronometerCountDown(R.id.w_chrono, true)
                 v.setTextViewText(R.id.w_label, "消灯まで")
+                v.setTextColor(R.id.w_label, context.getColor(R.color.muted))
                 v.setTextViewText(R.id.w_button, "やめる")
                 v.setInt(R.id.w_button, "setBackgroundResource", R.drawable.fill_ink)
             } else {
@@ -83,8 +79,10 @@ class TimerWidget : AppWidgetProvider() {
                 v.setViewVisibility(R.id.w_minutes, View.VISIBLE)
                 v.setChronometer(R.id.w_chrono, SystemClock.elapsedRealtime(), null, false)
                 v.setTextViewText(R.id.w_minutes, "${minutes}分")
-                v.setTextViewText(R.id.w_label, "消灯タイマー")
-                v.setTextViewText(R.id.w_button, "スタート")
+                val power = prefs.getBoolean("power", false)
+                v.setTextViewText(R.id.w_label, if (power) "消灯タイマー＋電源オフ" else "消灯タイマー")
+                v.setTextColor(R.id.w_label, context.getColor(if (power) R.color.accent else R.color.muted))
+                v.setTextViewText(R.id.w_button, if (power) "電源オフ" else "スタート")
                 v.setInt(R.id.w_button, "setBackgroundResource", R.drawable.fill_accent)
             }
 

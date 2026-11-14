@@ -33,6 +33,7 @@ class MainActivity : Activity() {
     private lateinit var optWifi: TextView
     private lateinit var optLock: TextView
     private lateinit var optPower: TextView
+    private lateinit var powerNote: TextView
     private lateinit var adjustBox: View
     private lateinit var presetRow: LinearLayout
     private val presetViews = mutableListOf<TextView>()
@@ -62,6 +63,7 @@ class MainActivity : Activity() {
         optWifi = findViewById(R.id.optWifi)
         optLock = findViewById(R.id.optLock)
         optPower = findViewById(R.id.optPower)
+        powerNote = findViewById(R.id.powerNote)
         adjustBox = findViewById(R.id.adjustBox)
         presetRow = findViewById(R.id.presetRow)
 
@@ -97,7 +99,9 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         // ウィジェットで分数を変えた場合に合わせる
-        minutes = getSharedPreferences("settings", MODE_PRIVATE).getInt("minutes", minutes)
+        val p = getSharedPreferences("settings", MODE_PRIVATE)
+        minutes = p.getInt("minutes", minutes)
+        power = p.getBoolean("power", power)
         ui.post(ticker)
     }
 
@@ -191,6 +195,11 @@ class MainActivity : Activity() {
             .putExtra(TimerService.EXTRA_LOCK, lock)
             .putExtra(TimerService.EXTRA_POWER, power)
         startForegroundService(i)
+        // 電源オフはたまにしか使わないので、1回使ったら自動でOFFに戻す
+        if (power) {
+            power = false
+            save()
+        }
         TimerService.endAtMillis = System.currentTimeMillis() + minutes * 60_000L
         render()
     }
@@ -237,6 +246,10 @@ class MainActivity : Activity() {
         setCheck(optWifi, wifi)
         setCheck(optLock, lock)
         setCheck(optPower, power)
+        powerNote.visibility = if (power && !running) View.VISIBLE else View.GONE
+        if (!running) {
+            startButton.text = if (power) "スタート（電源オフ）" else "スタート"
+        }
 
         when (ShizukuShell.state()) {
             ShizukuShell.State.READY -> {

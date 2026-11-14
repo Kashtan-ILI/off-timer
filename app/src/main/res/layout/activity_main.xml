@@ -115,7 +115,28 @@
     <TextView android:id="@+id/optAirplane" style="@style/Option" android:text="機内モードにする" />
     <TextView android:id="@+id/optWifi" style="@style/Option" android:text="Wi-Fiを切る" />
     <TextView android:id="@+id/optLock" style="@style/Option" android:text="画面をロックする" />
-    <TextView android:id="@+id/optPower" style="@style/Option" android:text="電源を切る" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/dash_line" />
+
+    <TextView
+        android:id="@+id/optPower"
+        style="@style/Option"
+        android:text="電源を切る（たまに使う）"
+        android:textColor="@color/accent"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/powerNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="34dp"
+        android:text="時間が来たら電源が切れます。アラームは鳴りません。\n1回使うと自動でOFFに戻ります。"
+        android:textColor="@color/accent"
+        android:textSize="12sp"
+        android:visibility="gone" />
 
     <View
         android:layout_width="match_parent"
