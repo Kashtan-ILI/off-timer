@@ -17,7 +17,43 @@ class TimerWidget : AppWidgetProvider() {
         updateAll(context)
     }
 
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_ADJUST) {
+            // カウントダウン中は変えない
+            if (TimerService.endAtMillis == 0L) {
+                val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                val now = prefs.getInt("minutes", 10)
+                val next = step(now, intent.getIntExtra(EXTRA_DIR, 1))
+                prefs.edit().putInt("minutes", next).apply()
+            }
+            updateAll(context)
+            return
+        }
+        super.onReceive(context, intent)
+    }
+
     companion object {
+        private const val ACTION_ADJUST = "com.kashtan.offtimer.ADJUST"
+        private const val EXTRA_DIR = "dir"
+
+        /** ウィジェットの－／＋で選べる分数 */
+        private val STEPS = listOf(1, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180)
+
+        private fun step(now: Int, dir: Int): Int {
+            return if (dir > 0) STEPS.firstOrNull { it > now } ?: STEPS.last()
+            else STEPS.lastOrNull { it < now } ?: STEPS.first()
+        }
+
+        private fun adjustIntent(context: Context, dir: Int, code: Int): PendingIntent {
+            val i = Intent(context, TimerWidget::class.java)
+                .setAction(ACTION_ADJUST)
+                .putExtra(EXTRA_DIR, dir)
+            return PendingIntent.getBroadcast(
+                context, code, i,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
+
         fun updateAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(ComponentName(context, TimerWidget::class.java))
@@ -60,6 +96,13 @@ class TimerWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             v.setOnClickPendingIntent(R.id.w_button, pi)
+
+            // －／＋（カウントダウン中は薄く表示して無効）
+            v.setOnClickPendingIntent(R.id.w_minus, adjustIntent(context, -1, 30))
+            v.setOnClickPendingIntent(R.id.w_plus, adjustIntent(context, 1, 31))
+            val alpha = if (running) 0.3f else 1f
+            v.setFloat(R.id.w_minus, "setAlpha", alpha)
+            v.setFloat(R.id.w_plus, "setAlpha", alpha)
 
             // 左側を押したらアプリを開いて分数を変えられる
             val open = PendingIntent.getActivity(

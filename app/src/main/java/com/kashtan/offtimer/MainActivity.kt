@@ -22,6 +22,7 @@ class MainActivity : Activity() {
     private var airplane = true
     private var wifi = true
     private var lock = true
+    private var power = false
 
     private lateinit var bigTime: TextView
     private lateinit var caption: TextView
@@ -31,6 +32,7 @@ class MainActivity : Activity() {
     private lateinit var optAirplane: TextView
     private lateinit var optWifi: TextView
     private lateinit var optLock: TextView
+    private lateinit var optPower: TextView
     private lateinit var adjustBox: View
     private lateinit var presetRow: LinearLayout
     private val presetViews = mutableListOf<TextView>()
@@ -59,6 +61,7 @@ class MainActivity : Activity() {
         optAirplane = findViewById(R.id.optAirplane)
         optWifi = findViewById(R.id.optWifi)
         optLock = findViewById(R.id.optLock)
+        optPower = findViewById(R.id.optPower)
         adjustBox = findViewById(R.id.adjustBox)
         presetRow = findViewById(R.id.presetRow)
 
@@ -67,6 +70,7 @@ class MainActivity : Activity() {
         airplane = prefs.getBoolean("airplane", true)
         wifi = prefs.getBoolean("wifi", true)
         lock = prefs.getBoolean("lock", true)
+        power = prefs.getBoolean("power", false)
 
         buildPresets()
 
@@ -75,6 +79,7 @@ class MainActivity : Activity() {
         optAirplane.setOnClickListener { airplane = !airplane; save(); render() }
         optWifi.setOnClickListener { wifi = !wifi; save(); render() }
         optLock.setOnClickListener { lock = !lock; save(); render() }
+        optPower.setOnClickListener { power = !power; save(); render() }
         status.setOnClickListener {
             if (ShizukuShell.state() == ShizukuShell.State.NO_PERMISSION) ShizukuShell.requestPermission()
         }
@@ -91,6 +96,8 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // ウィジェットで分数を変えた場合に合わせる
+        minutes = getSharedPreferences("settings", MODE_PRIVATE).getInt("minutes", minutes)
         ui.post(ticker)
     }
 
@@ -147,6 +154,7 @@ class MainActivity : Activity() {
             .putBoolean("airplane", airplane)
             .putBoolean("wifi", wifi)
             .putBoolean("lock", lock)
+            .putBoolean("power", power)
             .apply()
         TimerWidget.updateAll(this)
     }
@@ -158,7 +166,7 @@ class MainActivity : Activity() {
             render()
             return
         }
-        if (!airplane && !wifi && !lock) {
+        if (!airplane && !wifi && !lock && !power) {
             showMessage("やることが1つも選ばれていません")
             return
         }
@@ -181,6 +189,7 @@ class MainActivity : Activity() {
             .putExtra(TimerService.EXTRA_AIRPLANE, airplane)
             .putExtra(TimerService.EXTRA_WIFI, wifi)
             .putExtra(TimerService.EXTRA_LOCK, lock)
+            .putExtra(TimerService.EXTRA_POWER, power)
         startForegroundService(i)
         TimerService.endAtMillis = System.currentTimeMillis() + minutes * 60_000L
         render()
@@ -215,7 +224,7 @@ class MainActivity : Activity() {
         val lockedAlpha = if (running) 0.35f else 1f
         adjustBox.alpha = lockedAlpha
         presetRow.alpha = lockedAlpha
-        listOf(optAirplane, optWifi, optLock).forEach { it.isEnabled = !running; it.alpha = lockedAlpha }
+        listOf(optAirplane, optWifi, optLock, optPower).forEach { it.isEnabled = !running; it.alpha = lockedAlpha }
 
         presets.forEachIndexed { i, m ->
             val v = presetViews[i]
@@ -227,6 +236,7 @@ class MainActivity : Activity() {
         setCheck(optAirplane, airplane)
         setCheck(optWifi, wifi)
         setCheck(optLock, lock)
+        setCheck(optPower, power)
 
         when (ShizukuShell.state()) {
             ShizukuShell.State.READY -> {

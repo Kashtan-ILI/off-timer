@@ -25,6 +25,7 @@ class TimerService : Service() {
         const val EXTRA_AIRPLANE = "airplane"
         const val EXTRA_WIFI = "wifi"
         const val EXTRA_LOCK = "lock"
+        const val EXTRA_POWER = "power"
 
         private const val CH_COUNT = "countdown_live"
         private const val CH_RESULT = "result"
@@ -75,11 +76,13 @@ class TimerService : Service() {
         val airplane = intent.getBooleanExtra(EXTRA_AIRPLANE, prefs.getBoolean("airplane", true))
         val wifi = intent.getBooleanExtra(EXTRA_WIFI, prefs.getBoolean("wifi", true))
         val lock = intent.getBooleanExtra(EXTRA_LOCK, prefs.getBoolean("lock", true))
-        command = ShizukuShell.buildCommand(airplane, wifi, lock)
+        val power = intent.getBooleanExtra(EXTRA_POWER, prefs.getBoolean("power", false))
+        command = ShizukuShell.buildCommand(airplane, wifi, lock, power)
         summary = listOfNotNull(
             if (airplane) "機内モード" else null,
             if (wifi) "Wi-Fi OFF" else null,
-            if (lock) "ロック" else null
+            if (lock) "ロック" else null,
+            if (power) "電源オフ" else null
         ).joinToString("・")
         val durationMs = minutes * 60_000L
         endAtMillis = System.currentTimeMillis() + durationMs

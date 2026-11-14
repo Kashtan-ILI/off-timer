@@ -44,11 +44,12 @@ object ShizukuShell {
         }
     }
 
-    fun buildCommand(airplane: Boolean, wifi: Boolean, lock: Boolean): String {
+    fun buildCommand(airplane: Boolean, wifi: Boolean, lock: Boolean, power: Boolean): String {
         val parts = mutableListOf<String>()
         if (airplane) parts += "cmd connectivity airplane-mode enable"
         if (wifi) parts += "svc wifi disable"
         if (lock) parts += "input keyevent 223" // KEYCODE_SLEEP = 画面を消してロック
+        if (power) parts += "svc power shutdown" // 最後に電源オフ
         return parts.joinToString("; ")
     }
 }

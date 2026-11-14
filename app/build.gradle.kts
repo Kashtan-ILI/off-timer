@@ -11,8 +11,8 @@ android {
         applicationId = "com.kashtan.offtimer"
         minSdk = 30
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     // 毎回同じ鍵で署名するので、新しい版を上書きインストールできる

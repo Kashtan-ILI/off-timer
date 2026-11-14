@@ -115,6 +115,7 @@
     <TextView android:id="@+id/optAirplane" style="@style/Option" android:text="機内モードにする" />
     <TextView android:id="@+id/optWifi" style="@style/Option" android:text="Wi-Fiを切る" />
     <TextView android:id="@+id/optLock" style="@style/Option" android:text="画面をロックする" />
+    <TextView android:id="@+id/optPower" style="@style/Option" android:text="電源を切る" />
 
     <View
         android:layout_width="match_parent"

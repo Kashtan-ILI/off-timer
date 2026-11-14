@@ -50,9 +50,31 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/w_button"
-        android:layout_width="92dp"
+        android:id="@+id/w_minus"
+        android:layout_width="40dp"
         android:layout_height="match_parent"
+        android:gravity="center"
+        android:background="@drawable/box"
+        android:text="－"
+        android:textColor="@color/ink"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/w_plus"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:gravity="center"
+        android:background="@drawable/box"
+        android:text="＋"
+        android:textColor="@color/ink"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/w_button"
+        android:layout_width="84dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="6dp"
         android:gravity="center"
         android:background="@drawable/fill_accent"
         android:text="スタート"
